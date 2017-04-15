@@ -171,7 +171,7 @@ describe('SyncForce', () => {
     })
 
     it('should update records when push topic received', () => {
-
+      // TODO
     })
 
     it('should use last modified date to run query', () => {
@@ -234,6 +234,24 @@ describe('SyncForce', () => {
       const rec = collection.findOne({})
       expect(rec.Id).to.equal('123')
       expect(rec.OtherProperty).to.eql({somethingelse: true})
+    })
+
+    it('should not send update to SF when there is no SF data', () => {
+      const collection = new Mongo.Collection(null)
+      const syncforce = {
+        create: sinon.stub().returns({ id: '123' }),
+        update: sinon.stub()
+      }
+      const hook = new Hooks(syncforce, collection, 'ResourceName')
+      hook.init()
+      collection.insert({
+        Testing: true
+      })
+      collection.update({Id: '123'}, {$set: { OtherProperty: {somethingelse: true }}})
+      expect(syncforce.create).to.have.been.calledWith('ResourceName', {Testing: true})
+      const rec = collection.findOne({Id: '123'})
+      expect(syncforce.update).to.not.have.been.called
+      expect(rec.OtherProperty, 'it should still update in mongo').to.eql({somethingelse: true})
     })
 
     it('should run outbound hooks on insert, skip insert if return false', () => {
