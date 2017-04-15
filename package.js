@@ -11,17 +11,15 @@ Package.describe({
 });
 
 Npm.depends({
-  'jsforce': '1.7.1',
-  'lodash': '4.17.4',
-  'log': '1.4.0'
+  'jsforce': '1.7.1'
 });
 
 Package.onUse(function (api) {
   //api.versionsFrom('1.3-rc.3');
   api.use('ecmascript');
   api.use('check');
-  api.use('aldeed:simple-schema');
   api.use('matb33:collection-hooks');
+  api.use('tmeasday:check-npm-versions@0.3.1');
   api.mainModule('syncforce-server.js', 'server');
   // API exported for both client and server
   // (the server file includes it, so that we don't have 2 main modules for the server)
@@ -33,7 +31,6 @@ Package.onTest(function (api) {
   api.use('ecmascript');
   api.use('nicocrm:syncforce');
   // MUST specify the version when testing, or Meteor will load the oldest version it can find!
-  api.use('aldeed:simple-schema@1.5.3');
   api.use('matb33:collection-hooks@0.8.4');
   api.mainModule('syncforce-tests.js', ['client', 'server']);
   api.mainModule('syncforce-server-tests.js', 'server');

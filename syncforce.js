@@ -5,6 +5,9 @@ import {check, Match} from 'meteor/check'
 import CollectionSync from './CollectionSync'
 import MetadataSync from './MetadataSync'
 import Logging from './lib/logging'
+import { checkNpmVersions } from 'meteor/tmeasday:check-npm-versions';
+
+checkNpmVersions({ 'simpl-schema': '0.x.x', log: '1.x.x' }, 'nicocrm:syncforce');
 
 let connection = null,
   currentSyncs = {}

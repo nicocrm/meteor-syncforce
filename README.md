@@ -15,6 +15,10 @@ Usage
 #### Install meteor package:
 
         meteor add nicocrm:syncforce
+        
+#### Install dependencies
+
+        npm install --save simpl-schema log lodash
 
 #### Initialize connection:
 

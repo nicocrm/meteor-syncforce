@@ -1,4 +1,4 @@
-import {SimpleSchema} from 'meteor/aldeed:simple-schema'
+import SimpleSchema from 'simpl-schema'
 
 /**
  * Build the simple schema based on the field metadata (an array of fields)
@@ -35,17 +35,16 @@ export default function buildEntitySchema(fieldMetadata) {
         break
       case 'Currency':
       case 'Number':
-        if(field.precision !== "0")
-          fieldDef.decimal = true
+        if(field.precision === "0")
+          fieldDef.type = SimpleSchema.Integer
     }
     if (fieldDef)
       current[field.fullName] = fieldDef
     return current
   }, {})
-  // console.log('using schema', schema);
-  return new SimpleSchema([schema, {
+  return new SimpleSchema(schema).extend({
     Id: { type: String, optional: true }
-  }])
+  })
 }
 
 function getTypeForField(type) {
