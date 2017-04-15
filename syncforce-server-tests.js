@@ -219,6 +219,23 @@ describe('SyncForce', () => {
       expect(rec.Id).to.equal('123')
     })
 
+    it('should insert object with complex property, but not send them to Salesforce', () => {
+      const collection = new Mongo.Collection(null)
+      const syncforce = {
+        create: sinon.stub().returns({ id: '123' })
+      }
+      const hook = new Hooks(syncforce, collection, 'ResourceName')
+      hook.init()
+      collection.insert({
+        Testing: true,
+        OtherProperty: { somethingelse: true }
+      })
+      expect(syncforce.create).to.have.been.calledWith('ResourceName', {Testing: true})
+      const rec = collection.findOne({})
+      expect(rec.Id).to.equal('123')
+      expect(rec.OtherProperty).to.eql({somethingelse: true})
+    })
+
     it('should run outbound hooks on insert, skip insert if return false', () => {
       const collection = new Mongo.Collection(null)
       const syncforce = {

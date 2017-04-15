@@ -100,7 +100,7 @@ class CollectionSync {
       }))
       .on('end', Meteor.bindEnvironment(_ => {
         this.runDeleted(syncStart, status, (err, status) => {
-          Logging.debug('Sync %s complete', this.resource, status)
+          // Logging.debug('Sync %s complete', this.resource, status)
           this.running = false
           this.lastSync = new Date(status.lastRecordSyncDate) || syncStart
           if(callback)

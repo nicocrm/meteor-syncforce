@@ -1,5 +1,6 @@
 import {expect} from 'meteor/practicalmeteor:chai'
 import {getFieldMetadata, buildEntitySchema} from 'meteor/nicocrm:syncforce'
+import SimpleSchema from 'simpl-schema'
 
 describe('getFieldMetadata', () => {
   it('should be defined', () => {
@@ -21,18 +22,14 @@ describe('buildEntitySchema', () => {
       }
     ]
     const schema = buildEntitySchema(metadata)
-    expect(schema.schema()).to.have.property('AccountName').that.eql({
-      type: String, optional: true, label: 'Account'
-    })
+    expect(schema.schema()).to.have.property('AccountName').that.satisfy(p => p.label === 'Account' && p.optional)
   })
 
   it('should include Id property', () => {
     const metadata = [
     ]
     const schema = buildEntitySchema(metadata)
-    expect(schema.schema()).to.have.property('Id').that.eql({
-      type: String, optional: true
-    })
+    expect(schema.schema()).to.have.property('Id').that.satisfy(p => p.optional)
   })
 
   it('should mark fields as required', () => {
@@ -45,9 +42,7 @@ describe('buildEntitySchema', () => {
       }
     ]
     const schema = buildEntitySchema(metadata)
-    expect(schema.schema()).to.have.property('AccountName').that.eql({
-      type: String, optional: false, label: 'Account'
-    })
+    expect(schema.schema()).to.have.property('AccountName').that.satisfy(p => p.label === 'Account' && !p.optional)
   })
 
   it('should set up regex for date fields', () => {
@@ -59,9 +54,12 @@ describe('buildEntitySchema', () => {
       }
     ]
     const schema = buildEntitySchema(metadata)
-    expect(schema.schema()).to.have.property('CloseDate').that.eql({
-      type: String, optional: true, label: 'Close Date', regEx: /\d{4}-\d{2}-\d{2}/
-    })
+    expect(() => schema.validate({CloseDate: 'xxx'})).to.throw()
+    expect(() => schema.validate({CloseDate: '2012/03/05'})).to.throw()
+    expect(() => schema.validate({CloseDate: '2012-03-05'})).to.not.throw()
+    // expect(schema.schema()).to.have.property('CloseDate').that.satisfy(p =>
+    //   p.optional &&  p.label === 'Close Date' && p.regEx === /\d{4}-\d{2}-\d{2}/
+    // )
   })
 
   // it('should set up regex for date-time fields', () => {
