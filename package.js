@@ -15,10 +15,10 @@ Npm.depends({
 });
 
 Package.onUse(function (api) {
-  //api.versionsFrom('1.3-rc.3');
+  api.versionsFrom('1.4.4.1');
   api.use('ecmascript');
   api.use('check');
-  api.use('matb33:collection-hooks');
+  api.use('matb33:collection-hooks@0.8.4');
   api.use('tmeasday:check-npm-versions@0.3.1');
   api.mainModule('syncforce-server.js', 'server');
   // API exported for both client and server
