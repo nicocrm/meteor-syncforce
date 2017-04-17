@@ -20,7 +20,9 @@ export default function buildEntitySchema(fieldMetadata, allowMissingRequiredFie
       case 'Lookup':
         // add field for the lookup entity
         current[field.fullName.replace(/Id$/, '').replace(/__c$/, '__r')] = {
-          type: lookupSchema, optional: field.required !== 'true', label: field.label || field.fullName
+          type: lookupSchema,
+          optional: allowMissingRequiredFields || field.required !== 'true',
+          label: field.label || field.fullName
         }
         break;
       case 'Date':
