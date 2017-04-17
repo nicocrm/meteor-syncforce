@@ -7,15 +7,16 @@ import SimpleSchema from 'simpl-schema'
  *  - for a date property a regex will be included to ensure it is passed in the correct format to SF
  *  - for a lookup property an associated property named [SF relationship property name] will be created,
  *    with a sub schema of Name + Id.  For example AccountId => Account = { Name, Id }, Record_Owner__c => Record_Owner__r = {Name, Id}
- * @param [object] fieldMetadata - metadata obtained with getFieldMetadata
+ * @param fieldMetadata object - metadata obtained with getFieldMetadata
+ * @param allowMissingRequiredFields [bool] if true, fields will all be marked as optional
  * @return SimpleSchema object
  */
-export default function buildEntitySchema(fieldMetadata) {
+export default function buildEntitySchema(fieldMetadata, allowMissingRequiredFields = true) {
   const schema = fieldMetadata.reduce((current, field) => {
-    let fieldDef = { type: getTypeForField(field.type), optional: field.required !== 'true' }
-    if(field.label)
+    let fieldDef = {type: getTypeForField(field.type), optional: field.required !== 'true'}
+    if (field.label)
       fieldDef.label = field.label
-    switch(field.type) {
+    switch (field.type) {
       case 'Lookup':
         // add field for the lookup entity
         current[field.fullName.replace(/Id$/, '').replace(/__c$/, '__r')] = {
@@ -35,20 +36,22 @@ export default function buildEntitySchema(fieldMetadata) {
         break
       case 'Currency':
       case 'Number':
-        if(field.precision === "0")
+        if (field.precision === "0")
           fieldDef.type = SimpleSchema.Integer
     }
+    if(fieldDef && allowMissingRequiredFields)
+      fieldDef.optional = true
     if (fieldDef)
       current[field.fullName] = fieldDef
     return current
   }, {})
   return new SimpleSchema(schema).extend({
-    Id: { type: String, optional: true }
+    Id: {type: String, optional: true}
   })
 }
 
 function getTypeForField(type) {
-  switch(type) {
+  switch (type) {
     case 'Checkbox':
       return Boolean
     case 'Currency':
@@ -62,5 +65,5 @@ function getTypeForField(type) {
 // for entity lookup we only include the name.
 // Note that this will cause the other fields to be cleaned up when the schema is validated!
 const lookupSchema = new SimpleSchema({
-  Name: { type: String }, Id: { type: String }
+  Name: {type: String}, Id: {type: String}
 })
