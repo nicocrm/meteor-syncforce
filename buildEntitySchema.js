@@ -7,7 +7,7 @@ import SimpleSchema from 'simpl-schema'
  *  - for a date property a regex will be included to ensure it is passed in the correct format to SF
  *  - for a lookup property an associated property named [SF relationship property name] will be created,
  *    with a sub schema of Name + Id.  For example AccountId => Account = { Name, Id }, Record_Owner__c => Record_Owner__r = {Name, Id}
- * @param fieldMetadata object - metadata obtained with getFieldMetadata
+ * @param fieldMetadata object - metadata obtained with getSingleFieldMetadata
  * @param allowMissingRequiredFields [bool] if true, fields will all be marked as optional
  * @return SimpleSchema object
  */
