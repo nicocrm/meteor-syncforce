@@ -8,8 +8,8 @@ const DEFAULT_INTERVAL = 30
 // Mongo collection
 // the records in the collection will be indexed using the fullName property
 class MetadataSync {
-  constructor(connection, collection, metaType, fullNames) {
-    this.connection = connection
+  constructor(syncforce, collection, metaType, fullNames) {
+    this.connection = syncforce.getConnection()
     this.collection = collection
     this.metaType = metaType
     this.fullNames = fullNames

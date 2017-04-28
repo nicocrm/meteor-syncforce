@@ -5,12 +5,12 @@ import {check, Match} from 'meteor/check'
 import CollectionSync from './CollectionSync'
 import MetadataSync from './MetadataSync'
 import Logging from './lib/logging'
-import { checkNpmVersions } from 'meteor/tmeasday:check-npm-versions';
+import {checkNpmVersions} from 'meteor/tmeasday:check-npm-versions';
 
-checkNpmVersions({ 'simpl-schema': '0.x.x', log: '1.x.x' }, 'nicocrm:syncforce');
+checkNpmVersions({'simpl-schema': '0.x.x', log: '1.x.x'}, 'nicocrm:syncforce');
 
-let connection = null,
-  currentSyncs = {}
+let _currentSyncs = {},
+  _connectionOptions = null
 
 /**
  * Singleton object used for communicating with Salesforce
@@ -20,20 +20,39 @@ const SyncForce = {
   // will throw an exception if connection cannot be established
   login(settings) {
     check(settings, Match.ObjectIncluding({
+      // TODO need to update to use the OAuth2 flow
+      // this will let us get a refresh token instead of relying on session ids (which can expire)
       user: String,
       password: String,
-      token: String,
-      login_url: String
+      token: String,  // security token
+      login_url: String,
+      // If oauth settings are passed they will be used to capture a refresh token
+      // (TODO need to test this part)
+      oauth2: Match.Optional({
+        clientId: String,
+        clientSecret: String,
+        // this must be specified, but you can pass something like http://localhost
+        redirectUri: String
+      })
     }))
-
-    connection = new jsforce.Connection({
+    const con = new jsforce.Connection({
       loginUrl: settings.login_url,
       // version 37 and above have some problem with streaming
-      version: '36.0'
+      version: '36.0',
+      oauth2: settings.oauth2
     })
-    var sync = Meteor.wrapAsync(connection.login, connection)
-    var loginResult = sync(settings.user, settings.password + settings.token)
-    return connection
+    //  TODO instead of calling login every time we should capture the access token
+    // the first time and reuse it
+    const sync = Meteor.wrapAsync(con.login, con)
+    sync(settings.user, settings.password + settings.token)
+    // build up options that will be used to create connections in getConnection()
+    _connectionOptions = {
+      version: '36.0',
+      instanceUrl: con.instanceUrl,
+      accessToken: con.accessToken,
+      // refreshtoken will not be available, unless oauth2 settings are used
+      refreshToken: con.refreshToken
+    }
   },
 
   // Optionally, provide a logger object to use.
@@ -46,15 +65,11 @@ const SyncForce = {
   // Return jsforce connection object.
   // This can be used to invoke any operation that is not already exposed by the
   // wrapper, but in that case they also need to be wrapped to be asynchronous.
+  // This uses a shared access token - do not call logout!
   getConnection() {
-    if (!connection)
+    if (!_connectionOptions)
       throw new Error('Connection not initialized - call login first')
-    return connection
-  },
-
-  // Set the connection explicitly (mostly for testing)
-  setConnection(conn) {
-    connection = conn
+    return new jsforce.Connection(_connectionOptions)
   },
 
   // Setup a synchronized collection
@@ -120,13 +135,13 @@ const SyncForce = {
       timeStampField: Match.Optional(String)
     })
 
-    if (currentSyncs[resource]) {
-      currentSyncs[resource].stop()
+    if (_currentSyncs[resource]) {
+      _currentSyncs[resource].stop()
     }
-    var c = new CollectionSync(SyncForce, collection, resource, condition, options)
+    const c = new CollectionSync(SyncForce, collection, resource, condition, options)
     // TODO: is it possible to ensure that only one sync runs at a time?
     c.start()
-    currentSyncs[resource] = c
+    _currentSyncs[resource] = c
     return c
   },
 
@@ -135,9 +150,9 @@ const SyncForce = {
     check(collection, Mongo.Collection)
     check(metaType, String)
     check(fullNames, [String])
-    var c = new MetadataSync(connection, collection, metaType, fullNames)
+    const c = new MetadataSync(SyncForce, collection, metaType, fullNames)
     c.start()
-    currentSyncs['metadata'] = c
+    _currentSyncs['metadata'] = c
     return c
   },
 
@@ -146,19 +161,18 @@ const SyncForce = {
   // be invoked when done
   // @param resource String The name of SF resource to be synced
   runSync(resource, callback) {
-    if (currentSyncs[resource]) {
+    if (_currentSyncs[resource]) {
       // XXX maybe we should only do that if they are not
       // subscribed to a push topic?
-      currentSyncs[resource].run()
+      _currentSyncs[resource].run()
     }
   },
 
   // Expose synchronous versions of a few jsforce methods
 
   query(soql) {
-    sf = this.getConnection()
-    var q = Meteor.wrapAsync(sf.query, sf)
-    return q(soql)
+    const sf = this.getConnection()
+    return Meteor.wrapAsync(sf.query, sf)(soql)
   },
 
   // Invoke apex method.

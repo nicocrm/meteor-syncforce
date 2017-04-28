@@ -12,16 +12,11 @@ import Subscription from './lib/Subscription'
 import CollectionSync from './CollectionSync'
 import EventEmitter from 'events'
 
-// TODO I really should write some tests for this crap...
 describe('SyncForce', () => {
   const fakeConnection = {}
 
   before(() => {
-    SyncForce.setConnection(fakeConnection)
-  })
-
-  after(() => {
-    SyncForce.setConnection(null)
+    SyncForce.getConnection = () => fakeConnection
   })
 
   it('should be defined', () => {

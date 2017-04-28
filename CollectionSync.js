@@ -24,6 +24,7 @@ class CollectionSync {
   //          no longer matches the condition we wont know about it)
   // @param options Object - see documentation in syncforce.js
   constructor(syncforce, collection, resource, condition, options) {
+    this.connection = syncforce.getConnection()
     this.syncforce = syncforce
     this.collection = collection
     this.resource = resource
@@ -43,7 +44,7 @@ class CollectionSync {
     if (this.options.useCollectionHooks)
       this.collectionHooks = new Hooks(syncforce, collection, resource, { outboundHooks: options.outboundHooks })
     if (this.options.topic) {
-      this.subscription = new Subscription(this, syncforce.getConnection(), options.topic)
+      this.subscription = new Subscription(this, this.connection, options.topic)
     }
     // TODO: we need to add a unique id index on the collection with "Id"
   }
@@ -129,7 +130,7 @@ class CollectionSync {
       // need to have at least 1 minute difference
       start = new Date(end.getTime() - 60000)
     }
-    this.syncforce.getConnection().sobject(this.resource)
+    this.connection.sobject(this.resource)
       .deleted(start.toISOString(), end.toISOString(), Meteor.bindEnvironment((err, res) => {
         if (err) {
           Logging.error('error running deleted items sync', err)
@@ -149,7 +150,7 @@ class CollectionSync {
   // create an async query for the object
   // note we do not use syncforce.find because that one is synchronous
   createQuery() {
-    var sob = this.syncforce.getConnection().sobject(this.resource)
+    var sob = this.connection.sobject(this.resource)
     var q = sob.find(this.createQueryWhere(), this.createQueryFields())
       .sort({[this.options.timeStampField]: 1})
     return q

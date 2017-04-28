@@ -41,8 +41,21 @@ describe('buildEntitySchema', () => {
         required: 'true'
       }
     ]
-    const schema = buildEntitySchema(metadata)
+    const schema = buildEntitySchema(metadata, false)
     expect(schema.schema()).to.have.property('AccountName').that.satisfy(p => p.label === 'Account' && !p.optional)
+  })
+
+  it('should not mark fields as required, when allowMissingRequiredFields is true', () => {
+    const metadata = [
+      {
+        fullName: 'AccountName',
+        label: 'Account',
+        type: 'Text',
+        required: 'true'
+      }
+    ]
+    const schema = buildEntitySchema(metadata, true)
+    expect(schema.schema()).to.have.property('AccountName').that.satisfy(p => p.label === 'Account' && p.optional)
   })
 
   it('should set up regex for date fields', () => {
