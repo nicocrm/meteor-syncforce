@@ -2,20 +2,18 @@ import {Meteor} from 'meteor/meteor'
 import {Mongo} from 'meteor/mongo';
 import {sinon} from 'meteor/practicalmeteor:sinon';
 import {expect} from 'meteor/practicalmeteor:chai'
-import jsforce from 'jsforce';
 // Import and rename a variable exported by syncforce.js.
 //import {SyncForce} from 'meteor/nicocrm:syncforce'
 //import {SyncForce} from './syncforce-server'
 import {SyncForce} from 'meteor/nicocrm:syncforce'
 import Hooks from './lib/Hooks'
-import Subscription from './lib/Subscription'
 import CollectionSync from './CollectionSync'
 import EventEmitter from 'events'
 
 describe('SyncForce', () => {
   const fakeConnection = {}
 
-  before(() => {
+  beforeEach(() => {
     SyncForce.getConnection = () => fakeConnection
   })
 
