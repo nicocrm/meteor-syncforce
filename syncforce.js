@@ -37,8 +37,7 @@ const SyncForce = {
     }))
     const con = new jsforce.Connection({
       loginUrl: settings.login_url,
-      // version 37 and above have some problem with streaming
-      version: '36.0',
+      version: '39.0',
       oauth2: settings.oauth2
     })
     //  TODO instead of calling login every time we should capture the access token
@@ -103,6 +102,8 @@ const SyncForce = {
   //      in the local collection.
   //      Can return modified object or false to skip (if false is returned we will
   //      also delete the local copy of the record, if it is already in our side)
+  //      NOTE: when the function is involved as a result of a streaming event, not all properties may be present
+  //      on the record!
   // @param options.onRemoved [function]
   //      to be applied when a record has been deleted in Salesforce.  This is not called
   //      when the record was removed locally.  It will be passed the record id, and if it

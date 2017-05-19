@@ -49,7 +49,10 @@ immediately.
 If a sync is already defined for the named resource it will be replaced.
 The method will return a CollectionSync object which can be used to control the
 sync state: start, stop, run.
-Note that if you pass a condition it will be added to the query when determining which records to sync.  So Status = Active is not a good example as the records that are made Inactive would never get removed from the local side!  More likely you would use that for a condition on recordtype.  You can also pass a transform function in the options to filter the retrieved records - if you don't want a record to be inserted you can return null.
+Note that if you pass a condition it will be added to the query when determining which records to sync.  
+So Status = Active is not a good example as the records that are made Inactive would never get removed from the 
+local side!  More likely you would use that for a condition on recordtype.  You can also pass a transform function 
+in the options to filter the retrieved records - if you don't want a record to be inserted you can return null.
 
 #### Run a sync on demand:
 
