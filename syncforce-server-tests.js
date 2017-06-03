@@ -78,6 +78,7 @@ describe('SyncForce', () => {
 
     // note this one can fail when the test does a large number of outputs (eg logs) for each insert call
     it('should sync large number of new records', sinon.test(function() {
+      this.timeout(10000); // set timeout to 20 sec.
       const collectionSync = new CollectionSync(sfMock, collection, 'Account', '', {})
       const callback = sinon.stub()
       // send records when query runs
