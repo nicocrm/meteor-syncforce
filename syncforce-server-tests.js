@@ -38,7 +38,8 @@ describe('SyncForce', () => {
         sobject: () => sobjectMock
       }
       sfMock = {
-        getConnection: () => connectionMock
+        getConnection: () => connectionMock,
+        _notifySynced: sinon.stub()
       }
     })
 
@@ -136,6 +137,22 @@ describe('SyncForce', () => {
       collectionSync.run()
       // check that the method was called
       expect(onRemoved).to.have.been.called
+    })
+
+    it('should send sync event when a record is removed from SF', () => {
+      const collectionSync = new CollectionSync(sfMock, collection, 'Account', '', {
+      })
+      collection.insert({
+        Testing: '123456', Id: 'SFID'
+      })
+      findEmitter.run = () => {
+        findEmitter.emit('end')
+      }
+      sobjectMock.deleted = sinon.stub().yields(null, {deletedRecords: [{Id: 'SFID'}]})
+      // run it
+      collectionSync.run()
+      // check that the method was called
+      expect(sfMock._notifySynced).to.have.been.called
     })
 
     it('should not delete if onRemoved return false', () => {

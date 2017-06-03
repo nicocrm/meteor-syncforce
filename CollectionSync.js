@@ -227,8 +227,10 @@ class CollectionSync {
       {$set: record})
     if (result.insertedId) {
       status.inserted += 1
+      this.syncforce._notifySynced('inserted', this.resource, record)
     } else {
       status.updated += 1
+      this.syncforce._notifySynced('updated', this.resource, record)
     }
     status.lastRecordSyncDate = record[this.options.timeStampField]
   }
@@ -246,6 +248,7 @@ class CollectionSync {
       }
       const recIds = toDelete.map(r => r.id || r.Id)
       status.deleted += this.collection.direct.remove({Id: {$in: recIds}})
+      records.forEach(r => this.syncforce._notifySynced('removed', this.resource, r))
     }
   }
 }

@@ -6,11 +6,13 @@ import CollectionSync from './CollectionSync'
 import MetadataSync from './MetadataSync'
 import Logging from './lib/logging'
 import {checkNpmVersions} from 'meteor/tmeasday:check-npm-versions';
+import EventEmitter from 'events'
 
 checkNpmVersions({'simpl-schema': '0.x.x', log: '1.x.x'}, 'nicocrm:syncforce');
 
 let _currentSyncs = {},
-  _connectionOptions = null
+  _connectionOptions = null,
+  _syncEvents = new EventEmitter()
 
 /**
  * Singleton object used for communicating with Salesforce
@@ -167,6 +169,28 @@ const SyncForce = {
       // subscribed to a push topic?
       _currentSyncs[resource].run()
     }
+  },
+
+  /**
+   * Register a handler to be called when a resource is synced from Salesforce.
+   *
+   * @param eventType String - "updated", "inserted" or "removed"
+   * @param resourceType String - name of Salesforce resource
+   * @param handler - function that will receive an object with {record, eventType, resourceType}
+   */
+  onSynced(eventType, resourceType, handler) {
+    _syncEvents.on(eventType + ':' + resourceType, handler)
+  },
+
+  /**
+   * Invoked by the collection sync to trigger on synced events
+   *
+   * @param eventType
+   * @param resourceType
+   * @param record
+   */
+  _notifySynced(eventType, resourceType, record) {
+    _syncEvents.emit(eventType + ':' + resourceType, record, {eventType, resourceType})
   },
 
   // Expose synchronous versions of a few jsforce methods
