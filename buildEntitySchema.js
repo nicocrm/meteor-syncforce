@@ -1,5 +1,6 @@
 import SimpleSchema from 'simpl-schema'
 
+//noinspection JSUnusedGlobalSymbols
 /**
  * Build the simple schema based on the field metadata (an array of fields)
  *  - by default properties will be included as a string property
@@ -38,10 +39,12 @@ export default function buildEntitySchema(fieldMetadata, allowMissingRequiredFie
         break
       case 'Currency':
       case 'Number':
-        if (field.precision === "0")
+        if (field.precision === "0") { //noinspection JSUnresolvedVariable
           fieldDef.type = SimpleSchema.Integer
+        }
+        break
     }
-    if(fieldDef && allowMissingRequiredFields)
+    if (fieldDef && allowMissingRequiredFields)
       fieldDef.optional = true
     if (fieldDef)
       current[field.fullName] = fieldDef
