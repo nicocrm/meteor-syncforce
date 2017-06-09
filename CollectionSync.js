@@ -8,6 +8,7 @@ import {removeNonSfKeys, cleanSfRecord} from './lib/utility'
 import Logging from './lib/logging'
 import Hooks from './lib/Hooks'
 import Subscription from './lib/Subscription'
+import LookupCollection from './lib/LookupCollection'
 
 const DEFAULT_INTERVAL = 5
 
@@ -36,15 +37,20 @@ class CollectionSync {
       transform: null,
       onRemoved: null,
       useCollectionHooks: false,
+      lookupDefinitions: null,
       timeStampField: 'LastModifiedDate'
     }, options || {})
     this.intervalHandle = null
     this.running = null
     this.lastSync = null
     if (this.options.useCollectionHooks)
-      this.collectionHooks = new Hooks(syncforce, collection, resource, { outboundHooks: options.outboundHooks })
+      this.collectionHooks = new Hooks(syncforce, collection, resource,
+        {outboundHooks: options.outboundHooks})
     if (this.options.topic) {
       this.subscription = new Subscription(this, this.connection, options.topic)
+    }
+    if (this.options.lookupDefinitions) {
+      this.lookups = new LookupCollection(this.collection, this.options.lookupDefinitions)
     }
     // TODO: we need to add a unique id index on the collection with "Id"
   }
@@ -59,6 +65,8 @@ class CollectionSync {
         this.subscription.init()
       if (this.collectionHooks)
         this.collectionHooks.init()
+      if (this.lookups)
+        this.lookups.init(this.syncforce)
     }
     // run automatically?
     this.run()
@@ -72,6 +80,8 @@ class CollectionSync {
         this.subscription.deinit()
       if (this.collectionHooks)
         this.collectionHooks.deinit()
+      if (this.lookups)
+        this.lookups.deinit(this.syncforce)
     }
   }
 
@@ -104,7 +114,7 @@ class CollectionSync {
           // Logging.debug('Sync %s complete', this.resource, status)
           this.running = false
           this.lastSync = new Date(status.lastRecordSyncDate) || syncStart
-          if(callback)
+          if (callback)
             callback(err, status)
         })
       }))
@@ -136,7 +146,7 @@ class CollectionSync {
           Logging.error('error running deleted items sync', err)
         } else {
           try {
-            if(!isEmpty(res.deletedRecords))
+            if (!isEmpty(res.deletedRecords))
               this.processDeletedRecords(res.deletedRecords, status)
           } catch (e) {
             Logging.error('Error processing deleted records', e)
@@ -164,7 +174,7 @@ class CollectionSync {
     // infer LastSync from the LastModifiedDate in the DB
     if (!this.lastSync) {
       const lastRec = this.collection.findOne({
-        [this.options.timeStampField]: { $exists: true }
+        [this.options.timeStampField]: {$exists: true}
       }, {
         sort: {[this.options.timeStampField]: -1}
       })
@@ -207,6 +217,8 @@ class CollectionSync {
    */
   processRecord(record, status) {
     record = cleanSfRecord(record)
+    if (this.lookups)
+      record = this.lookups.onChildSynced(record)
     if (this.options.transform) {
       var transformed = this.options.transform(record)
       if (transformed === false) {
@@ -243,12 +255,16 @@ class CollectionSync {
   processDeletedRecords(records, status) {
     if (records.length) {
       let toDelete = records
-      if(this.options.onRemoved) {
+      if (this.options.onRemoved) {
         toDelete = records.filter(r => this.options.onRemoved(r.id || r.Id) !== false)
       }
       const recIds = toDelete.map(r => r.id || r.Id)
       status.deleted += this.collection.direct.remove({Id: {$in: recIds}})
-      records.forEach(r => this.syncforce._notifySynced('removed', this.resource, r))
+      records.forEach(r => {
+        if(this.lookups)
+          this.lookups.onChildRemoved(r)
+        this.syncforce._notifySynced('removed', this.resource, r)
+      })
     }
   }
 }

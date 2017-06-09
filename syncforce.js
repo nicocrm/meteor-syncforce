@@ -5,10 +5,11 @@ import {check, Match} from 'meteor/check'
 import CollectionSync from './CollectionSync'
 import MetadataSync from './MetadataSync'
 import Logging from './lib/logging'
+import isArray from 'lodash/isArray'
 import {checkNpmVersions} from 'meteor/tmeasday:check-npm-versions';
 import EventEmitter from 'events'
 
-checkNpmVersions({'simpl-schema': '0.x.x', log: '1.x.x'}, 'nicocrm:syncforce');
+checkNpmVersions({'simpl-schema': '0.x.x', log: '1.x.x', lodash: '4.x.x'}, 'nicocrm:syncforce');
 
 let _currentSyncs = {},
   _connectionOptions = null,
@@ -106,6 +107,10 @@ const SyncForce = {
   //      also delete the local copy of the record, if it is already in our side)
   //      NOTE: when the function is involved as a result of a streaming event, not all properties may be present
   //      on the record!
+  // @param options.lookupDefinitions [Object[]]
+  //      An object defining the relationships to other entities to be maintained automatically.
+  //      The related fields will be maintained whenever the parent record or child record is synced.
+  //      See Lookup.js for available options
   // @param options.onRemoved [function]
   //      to be applied when a record has been deleted in Salesforce.  This is not called
   //      when the record was removed locally.  It will be passed the record id, and if it
@@ -135,6 +140,15 @@ const SyncForce = {
       fields: Match.Optional([String]),
       useCollectionHooks: Match.Optional(Boolean),
       outboundHooks: Match.Optional(Object),
+      lookupDefinitions: Match.Optional([{
+        lookupField: String,
+        parentCollection: Mongo.Collection,
+        parentEntity: String,
+        parentFieldName: Match.Optional(String),
+        parentFields: Match.Optional([String]),
+        relatedListName: Match.Optional(String),
+        relatedListFields: Match.Optional([String]),
+      }]),
       timeStampField: Match.Optional(String)
     })
 
@@ -174,20 +188,23 @@ const SyncForce = {
   /**
    * Register a handler to be called when a resource is synced from Salesforce.
    *
-   * @param eventType String - "updated", "inserted" or "removed"
-   * @param resourceType String - name of Salesforce resource
-   * @param handler - function that will receive an object with {record, eventType, resourceType}
+   * @param {string|string[]} eventType - "updated", "inserted" or "removed"
+   * @param {string} resourceType - name of Salesforce resource
+   * @param {function} handler - function that will receive an object with {record, eventType, resourceType}
    */
   onSynced(eventType, resourceType, handler) {
-    _syncEvents.on(eventType + ':' + resourceType, handler)
+    if (!isArray(eventType)) {
+      eventType = [eventType]
+    }
+    eventType.forEach(event => _syncEvents.on(event + ':' + resourceType, handler))
   },
 
   /**
    * Invoked by the collection sync to trigger on synced events
    *
-   * @param eventType
-   * @param resourceType
-   * @param record
+   * @param {string} eventType
+   * @param {string} resourceType
+   * @param {object} record
    */
   _notifySynced(eventType, resourceType, record) {
     _syncEvents.emit(eventType + ':' + resourceType, record, {eventType, resourceType})

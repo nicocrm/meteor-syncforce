@@ -1,7 +1,7 @@
 import {Meteor} from 'meteor/meteor'
 import {Mongo} from 'meteor/mongo';
 import {sinon} from 'meteor/practicalmeteor:sinon';
-import {expect} from 'meteor/practicalmeteor:chai'
+import {expect, should} from 'meteor/practicalmeteor:chai'
 // Import and rename a variable exported by syncforce.js.
 //import {SyncForce} from 'meteor/nicocrm:syncforce'
 //import {SyncForce} from './syncforce-server'
@@ -9,6 +9,11 @@ import {SyncForce} from 'meteor/nicocrm:syncforce'
 import Hooks from './lib/Hooks'
 import CollectionSync from './CollectionSync'
 import EventEmitter from 'events'
+
+should()
+
+require('./lib/Lookup.tests')
+require('./lib/LookupCollection.tests')
 
 describe('SyncForce', () => {
   const fakeConnection = {}
@@ -195,7 +200,31 @@ describe('SyncForce', () => {
       expect(sobjectMock.find)
       // we take out a few minutes, so can't do an exact match
         .to.have.been.calledWithMatch(/ModifyDate >= 2016-03-03T.*/, '*')
+    })
 
+    it('should update parent lookup field when the record is synced from SF', () => {
+      const parentCollection = new Mongo.Collection(null)
+      parentCollection.insert({Id: 'parentid', Name: 'Foo'})
+      const collectionSync = new CollectionSync(sfMock, collection, 'Account', '', {
+        lookupDefinitions: [{
+          lookupField: 'ParentId', parentCollection, parentFieldName: 'Parent'
+        }]
+      })
+      // send records when query runs
+      findEmitter.run = () => {
+        findEmitter.emit('record', {
+          Name: 'new account', ParentId: 'parentid'
+        })
+        findEmitter.emit('end')
+      }
+      // run it
+      collectionSync.run()
+
+      // check results
+      console.log(collection.findOne({Name: 'new account'}))
+      expect(collection.findOne({Name: 'new account'})).to.be.ok
+        .and.to.have.property('Parent')
+        .that.eql({Id: 'parentid', Name: 'Foo'})
     })
   })
 
