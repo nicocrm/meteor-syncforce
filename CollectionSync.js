@@ -38,7 +38,8 @@ class CollectionSync {
       onRemoved: null,
       useCollectionHooks: false,
       lookupDefinitions: null,
-      timeStampField: 'LastModifiedDate'
+      timeStampField: 'LastModifiedDate',
+      syncDeletedItems: true
     }, options || {})
     this.intervalHandle = null
     this.running = null
@@ -110,13 +111,15 @@ class CollectionSync {
         }
       }))
       .on('end', Meteor.bindEnvironment(_ => {
-        this.runDeleted(syncStart, status, (err, status) => {
-          // Logging.debug('Sync %s complete', this.resource, status)
-          this.running = false
-          this.lastSync = new Date(status.lastRecordSyncDate) || syncStart
-          if (callback)
-            callback(err, status)
-        })
+        if(this.options.syncDeletedItems) {
+          this.runDeleted(syncStart, status, (err, status) => {
+            // Logging.debug('Sync %s complete', this.resource, status)
+            this.running = false
+            this.lastSync = new Date(status.lastRecordSyncDate) || syncStart
+            if (callback)
+              callback(err, status)
+          })
+        }
       }))
       .on('error', Meteor.bindEnvironment(err => {
         this.running = false

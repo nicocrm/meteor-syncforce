@@ -117,6 +117,8 @@ const SyncForce = {
   //      to be applied when a record has been deleted in Salesforce.  This is not called
   //      when the record was removed locally.  It will be passed the record id, and if it
   //      returns false, the record will then NOT be deleted locally.
+  // @param options.syncDeletedItems [boolean]
+  //      If false, do not attempt to sync deleted items (default to true)
   // @param options.topic [String]
   //      If provided, subscribe to this push topic to listen for data
   //      events.
