@@ -143,6 +143,7 @@ const SyncForce = {
       onRemoved: Match.Optional(Function),
       fields: Match.Optional([String]),
       useCollectionHooks: Match.Optional(Boolean),
+      syncDeletedItems: Match.Optional(Boolean),
       outboundHooks: Match.Optional(Object),
       lookupDefinitions: Match.Optional([{
         lookupField: String,
