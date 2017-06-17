@@ -51,7 +51,7 @@ class CollectionSync {
       this.subscription = new Subscription(this, this.connection, options.topic)
     }
     if (this.options.lookupDefinitions) {
-      this.lookups = new LookupCollection(this.collection, this.options.lookupDefinitions)
+      this.lookups = new LookupCollection(this.collection, this.resource, this.options.lookupDefinitions)
     }
     // TODO: we need to add a unique id index on the collection with "Id"
   }
@@ -111,7 +111,7 @@ class CollectionSync {
         }
       }))
       .on('end', Meteor.bindEnvironment(_ => {
-        if(this.options.syncDeletedItems) {
+        if (this.options.syncDeletedItems) {
           this.runDeleted(syncStart, status, (err, status) => {
             // Logging.debug('Sync %s complete', this.resource, status)
             this.running = false
@@ -242,10 +242,10 @@ class CollectionSync {
       {$set: record})
     if (result.insertedId) {
       status.inserted += 1
-      this.syncforce._notifySynced('inserted', this.resource, record)
+      this.syncforce._notifyReceived('inserted', this.resource, record)
     } else {
       status.updated += 1
-      this.syncforce._notifySynced('updated', this.resource, record)
+      this.syncforce._notifyReceived('updated', this.resource, record)
     }
     status.lastRecordSyncDate = record[this.options.timeStampField]
   }
@@ -263,10 +263,8 @@ class CollectionSync {
       }
       const recIds = toDelete.map(r => r.id || r.Id)
       status.deleted += this.collection.direct.remove({Id: {$in: recIds}})
-      records.forEach(r => {
-        if(this.lookups)
-          this.lookups.onChildRemoved(r)
-        this.syncforce._notifySynced('removed', this.resource, r)
+      recIds.forEach(r => {
+        this.syncforce._notifyReceived('removed', this.resource, {Id: r})
       })
     }
   }

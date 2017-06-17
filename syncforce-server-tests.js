@@ -44,7 +44,7 @@ describe('SyncForce', () => {
       }
       sfMock = {
         getConnection: () => connectionMock,
-        _notifySynced: sinon.stub()
+        _notifyReceived: sinon.stub()
       }
     })
 
@@ -158,7 +158,7 @@ describe('SyncForce', () => {
       // run it
       collectionSync.run()
       // check that the method was called
-      expect(sfMock._notifySynced).to.have.been.called
+      expect(sfMock._notifyReceived).to.have.been.called
     })
 
     it('should not delete if onRemoved return false', () => {

@@ -73,7 +73,7 @@ By default logging will use npm-log which just outputs to the console
 
 To get notified when a record is synced from Salesforce to the local collection:
 
-        SyncForce.onSynced('updated', 'Contact', (record, {eventType, resourceType}}) => {
+        SyncForce.onReceived('updated', 'Contact', (record, {eventType, resourceType}}) => {
             // eventType is "updated"
             // resourceType is "Contact" - this is the Salesforce entity name
             // record is the record that was just updated
@@ -81,10 +81,11 @@ To get notified when a record is synced from Salesforce to the local collection:
         
 Or:
        
-        SyncForce.onSynced('inserted', 'Contact', handler)
+        SyncForce.onReceived('inserted', 'Contact', handler)
        
-To get notified when a record is removed from Salesforce, and that removal is performed on the local collection:
+To get notified when a record is removed from Salesforce, and that removal is performed on the local collection
+(note that the handler will be passed an object containing only the Id property):
 
-        Syncforce.onSynced('removed', 'Contact', handler)
+        Syncforce.onReceived('removed', 'Contact', handler)
         
-The events are sent after the local operation has been completed.        
+The events are sent **after** the local operation has been completed.        

@@ -191,13 +191,14 @@ const SyncForce = {
   },
 
   /**
-   * Register a handler to be called when a resource is synced from Salesforce.
+   * Register a handler to be called when a resource is synced FROM Salesforce.
    *
    * @param {string|string[]} eventType - "updated", "inserted" or "removed"
    * @param {string} resourceType - name of Salesforce resource
    * @param {function} handler - function that will receive an object with {record, eventType, resourceType}
+   *    Note that the record passed to the "removed" handler will only contain an Id property
    */
-  onSynced(eventType, resourceType, handler) {
+  onReceived(eventType, resourceType, handler) {
     if (!isArray(eventType)) {
       eventType = [eventType]
     }
@@ -211,7 +212,7 @@ const SyncForce = {
    * @param {string} resourceType
    * @param {object} record
    */
-  _notifySynced(eventType, resourceType, record) {
+  _notifyReceived(eventType, resourceType, record) {
     _syncEvents.emit(eventType + ':' + resourceType, record, {eventType, resourceType})
   },
 
