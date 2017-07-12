@@ -14,7 +14,7 @@ import SimpleSchema from 'simpl-schema'
  */
 export default function buildEntitySchema(fieldMetadata, allowMissingRequiredFields = true) {
   const schema = fieldMetadata.reduce((current, field) => {
-    let fieldDef = {type: getTypeForField(field.type), optional: field.required !== 'true'}
+    let fieldDef = {type: getTypeForField(field.type), optional: (field.required !== 'true' && field.required !== true)}
     if (field.label)
       fieldDef.label = field.label
     switch (field.type) {
@@ -22,7 +22,7 @@ export default function buildEntitySchema(fieldMetadata, allowMissingRequiredFie
         // add field for the lookup entity
         current[field.fullName.replace(/Id$/, '').replace(/__c$/, '__r')] = {
           type: lookupSchema,
-          optional: allowMissingRequiredFields || field.required !== 'true',
+          optional: allowMissingRequiredFields || (field.required !== 'true' && field.required !== true),
           label: field.label || field.fullName
         }
         break;
@@ -45,6 +45,7 @@ export default function buildEntitySchema(fieldMetadata, allowMissingRequiredFie
         break
     }
     if (fieldDef && allowMissingRequiredFields)
+      // otherwise we just leave it undefined - which is the same as making it required
       fieldDef.optional = true
     if (fieldDef)
       current[field.fullName] = fieldDef
