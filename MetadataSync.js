@@ -42,7 +42,7 @@ class MetadataSync {
       let result = syncRead(this.metaType, this.fullNames)
       if(!isArray(result))
         result = [result]
-      const status = this.processResults(result, status)
+      const status = this.processResults(result)
       Logging.debug('Sync ' + this.metaType + ' metadata complete', status)
     } catch(err) {
       Logging.error('Error running ' + this.metaType + ' metadata sync', err)
