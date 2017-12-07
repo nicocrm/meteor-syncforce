@@ -189,7 +189,7 @@ class CollectionSync {
           where = '(' + where + ') and '
         // should we take off a few minutes to account for possible skew?
         var last = new Date(this.lastSync.getTime())
-        where += this.options.timeStampField + ' >= ' +
+        where += this.options.timeStampField + ' > ' +
           jsforce.Date.toDateTimeLiteral(last.toISOString())
       } else {
         where[this.options.timeStampField] = {
