@@ -113,9 +113,12 @@ class CollectionSync {
       .on('end', Meteor.bindEnvironment(_ => {
         if (this.options.syncDeletedItems) {
           this.runDeleted(syncStart, status, (err, status) => {
-            // Logging.debug('Sync %s complete', this.resource, status)
+            Logging.debug('Sync %s complete', this.resource, status)
             this.running = false
-            this.lastSync = new Date(status.lastRecordSyncDate) || syncStart
+            if(status.lastRecordSyncDate)
+              this.lastSync = new Date(status.lastRecordSyncDate)
+            else
+              this.lastSync = syncStart
             if (callback)
               callback(err, status)
           })
@@ -193,7 +196,7 @@ class CollectionSync {
           jsforce.Date.toDateTimeLiteral(last.toISOString())
       } else {
         where[this.options.timeStampField] = {
-          $gte: jsforce.Date.toDateTimeLiteral(this.lastSync.toISOString())
+          $gt: jsforce.Date.toDateTimeLiteral(this.lastSync.toISOString())
         }
       }
     }
