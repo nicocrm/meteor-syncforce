@@ -11,7 +11,7 @@ import EventEmitter from 'events'
 
 // checkNpmVersions({'simpl-schema': '0.x.x', log: '1.x.x', lodash: '4.x.x'}, 'nicocrm:syncforce');
 // Not sure why, but the lodash check always fails.
-checkNpmVersions({'simpl-schema': '0.x.x', log: '1.x.x'}, 'nicocrm:syncforce');
+checkNpmVersions({'simpl-schema': '1.x.x', log: '1.x.x'}, 'nicocrm:syncforce');
 
 let _currentSyncs = {},
   _connectionOptions = null,
