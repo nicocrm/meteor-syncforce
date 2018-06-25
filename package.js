@@ -1,6 +1,6 @@
 Package.describe({
   name: 'nicocrm:syncforce',
-  version: '0.0.26',
+  version: '0.0.27',
   // Brief, one-line summary of the package.
   summary: 'Automate synchronization between Mongo and Salesforce Entities',
   // URL to the Git repository containing the source code for this package.
@@ -11,10 +11,10 @@ Package.describe({
 });
 
 Npm.depends({
-  'jsforce': '1.8.0'
+  jsforce: '1.8.0'
 });
 
-Package.onUse(function (api) {
+Package.onUse(function(api) {
   api.versionsFrom('1.4.4.1');
   api.use('ecmascript');
   api.use('check');
@@ -26,8 +26,8 @@ Package.onUse(function (api) {
   api.mainModule('syncforce-shared.js', 'client');
 });
 
-Package.onTest(function (api) {
-  api.use('practicalmeteor:mocha')
+Package.onTest(function(api) {
+  api.use('practicalmeteor:mocha');
   api.use('ecmascript');
   api.use('nicocrm:syncforce');
   // MUST specify the version when testing, or Meteor will load the oldest version it can find!
